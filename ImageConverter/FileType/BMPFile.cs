@@ -34,13 +34,14 @@ namespace Converter.FileType
 
             for (int y = firstPixel.Y; y < lastPixel.Y; ++y)
             {
-                for (int x = firstPixel.X; x < lastPixel.X; ++x)
+                for (int x = firstPixel.X; x < lastPixel.X ; ++x)
                 {
                     var pixel = new Point(x, y);
                     int pixelIndex = Helpers.ToRowMajor(pixel, (int)BMPFileInfoHeader.Width) * 3;
 
+                    byte a = 0;
+
                     // Bytes stored in reverse
-                    byte a = 255; // Always 100% alpha
                     byte r = PixelData[pixelIndex + 2];
                     byte g = PixelData[pixelIndex + 1];
                     byte b = PixelData[pixelIndex];
@@ -82,11 +83,12 @@ namespace Converter.FileType
                 for (int x = firstPixel.X; x < lastPixel.X; ++x)
                 {
                     var pixel = new Point(x, y);
-                    int pixelIndex = Helpers.ToRowMajor(pixel, (int)BMPFileInfoHeader.Width) * 3;
+                    int pixelIndex = (Helpers.ToRowMajor(pixel, (int)BMPFileInfoHeader.Width) * 3);
 
                     var color = colors[colorIndex++];
 
                     // Bytes are stored in inverted (BGRA) order
+                    PixelData[pixelIndex + 3] = color.A;
                     PixelData[pixelIndex + 2] = color.R;
                     PixelData[pixelIndex + 1] = color.G;
                     PixelData[pixelIndex] = color.B;

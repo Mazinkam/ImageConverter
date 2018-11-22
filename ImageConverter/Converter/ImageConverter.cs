@@ -3,6 +3,7 @@ using Converter.FileType;
 using Converter.Misc;
 using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace Converter.Converter
@@ -95,44 +96,40 @@ namespace Converter.Converter
 
         private BMPFile ReadBMPFile(BinaryReader binaryReader)
         {
-
             //create a bmp file for us to handle bmp data
-            BMPFile bmpFile = new BMPFile
-            {
-                BMPFileHeader = new BMPFileHeader
-                {
-                    MagicHeader = binaryReader.ReadBytes(2),
-                    FileSize = binaryReader.ReadUInt32(),
-                    Reserved1 = binaryReader.ReadInt16(),
-                    Reserved2 = binaryReader.ReadInt16(),
-                    OffToPixelArray = binaryReader.ReadUInt32()
-                },
-                BMPFileInfoHeader = new BMPFileInfoHeader
-                {
-                    HeaderSize = binaryReader.ReadUInt32(),
-                    Width = binaryReader.ReadUInt32(),
-                    Height = binaryReader.ReadUInt32(),
-                    ColorPlanes = binaryReader.ReadUInt16(),
-                    BitCount = binaryReader.ReadUInt16(),
-                    CompressionType = binaryReader.ReadUInt32(),
-                    RawDataSize = binaryReader.ReadUInt32(),
-                    HorizontalPixelPerMeter = binaryReader.ReadUInt32(),
-                    VerticalPixelPerMeter = binaryReader.ReadUInt32(),
-                    ColorsUsed = binaryReader.ReadUInt32(),
-                    ImportantColors = binaryReader.ReadUInt32()
-                },
+            BMPFile bmpFile = new BMPFile();
+            bmpFile.BMPFileHeader = new BMPFileHeader();
 
-                //we at 54 now
-                //all of the image data
-                PixelData = binaryReader.ReadAllBytes()
-            };
+            bmpFile.BMPFileHeader.MagicHeader = binaryReader.ReadBytes(2); // 2
+            bmpFile.BMPFileHeader.FileSize = binaryReader.ReadUInt32(); // 4
+            bmpFile.BMPFileHeader.Reserved1 = binaryReader.ReadInt16(); // 2
+            bmpFile.BMPFileHeader.Reserved2 = binaryReader.ReadInt16(); // 2
+            bmpFile.BMPFileHeader.OffToPixelArray = binaryReader.ReadUInt32(); // 4
+
+            bmpFile.BMPFileInfoHeader = new BMPFileInfoHeader();
+
+            bmpFile.BMPFileInfoHeader.HeaderSize = binaryReader.ReadUInt32(); // 4
+            bmpFile.BMPFileInfoHeader.Width = binaryReader.ReadUInt32(); // 4 
+            bmpFile.BMPFileInfoHeader.Height = binaryReader.ReadUInt32(); // 4
+            bmpFile.BMPFileInfoHeader.ColorPlanes = binaryReader.ReadUInt16(); // 2
+            bmpFile.BMPFileInfoHeader.BitCount = binaryReader.ReadUInt16(); // 2
+            bmpFile.BMPFileInfoHeader.CompressionType = binaryReader.ReadUInt32(); // 4
+            bmpFile.BMPFileInfoHeader.RawDataSize = binaryReader.ReadUInt32(); // 4
+            bmpFile.BMPFileInfoHeader.HorizontalPixelPerMeter = binaryReader.ReadUInt32(); // 4
+            bmpFile.BMPFileInfoHeader.VerticalPixelPerMeter = binaryReader.ReadUInt32(); // 4
+            bmpFile.BMPFileInfoHeader.ColorsUsed = binaryReader.ReadUInt32(); // 4
+            bmpFile.BMPFileInfoHeader.ImportantColors = binaryReader.ReadUInt32(); // 4
+
+            //we at 54 now
+            //all of the image data
+            bmpFile.PixelData = binaryReader.ReadAllBytes().FlipArrayHorizontal((int)bmpFile.BMPFileInfoHeader.Height);
 
             return bmpFile;
         }
 
         private void WriteBMPFile(string fileName, DDSFile ddsFile, BC1CompressionFormat compressionFormat)
         {
-            using (BinaryWriter writer = new BinaryWriter(File.Open(fileName+".bmp", FileMode.Create)))
+            using (BinaryWriter writer = new BinaryWriter(File.Open(fileName, FileMode.Create)))
             {
                 byte[] BMPMagicNumber = { 0x42, 0x4D };
 
@@ -188,7 +185,7 @@ namespace Converter.Converter
                 int numberOfHorizontalBlocks = (int)ddsFile.DDSHeader.Width / Constants.BlockDimension;
                 int numberOfBlocks = numberOfVerticalBlocks * numberOfHorizontalBlocks;
 
-                for (int i = 0; i < numberOfBlocks; i++)
+                for (int i = 0; i < numberOfBlocks-1; ++i)
                 {
                     var blockIndex = Helpers.ToColumnMajor(i, numberOfHorizontalBlocks);
                     var blockData = ddsFile.GetBlockData(blockIndex);
@@ -197,7 +194,7 @@ namespace Converter.Converter
                     bmpFile.SetBlockColors(blockIndex, blockColors);
                 }
             
-                writer.Write(bmpFile.PixelData);
+                writer.Write(bmpFile.PixelData.FlipArrayHorizontal((int)bmpFile.BMPFileInfoHeader.Height));
             }
         }
 
@@ -220,7 +217,7 @@ namespace Converter.Converter
 
             var mainImageSize = Math.Max(1, (ddsFile.DDSHeader.Width + 3) / 4) * Math.Max(1, (ddsFile.DDSHeader.Height + 3) / 4) *8;
 
-            if(mainImageSize != ddsFile.DDSHeader.PitchOrLinearSize)
+            if (mainImageSize != ddsFile.DDSHeader.PitchOrLinearSize && ddsFile.DDSHeader.PitchOrLinearSize != 0)
                 throw new InvalidOperationException("Parsing wrong, check DDS file.");
 
             ddsFile.Data = binaryReader.ReadAllBytes();
@@ -259,13 +256,14 @@ namespace Converter.Converter
                 int numberOfHorizontalBlocks = (int)bmpFile.BMPFileInfoHeader.Width / Constants.BlockDimension;
                 int numberOfBlocks = numberOfVerticalBlocks * numberOfHorizontalBlocks;
 
-                for (int i = 0; i < numberOfBlocks; i++)
+                for (int i = 0; i < numberOfBlocks; ++i)
                 {
-                    var blockIndex = Helpers.ToColumnMajor(i, numberOfVerticalBlocks);
+                    var blockIndex = Helpers.ToColumnMajor(i, numberOfHorizontalBlocks);
                     var blockColors = bmpFile.GetBlockColors(blockIndex);
                     var blockData = compressionFormat.Compress(blockColors);
 
                     ddsFile.SetBlockData(blockIndex, blockData);
+                  
                 }
 
                 writer.Write(ddsFile.Data);
@@ -293,8 +291,7 @@ namespace Converter.Converter
                 Width = (uint)pixelWidth,
                 PixelFormat = pixelFormat,
                 MipMapCount = 0,
-                Caps = 0x1000 // texture, we don't handle harder things right now,
-
+                Caps = 0x1000 // texture, we don't handle harder things right now
             };
 
             header.PitchOrLinearSize = Math.Max(1, (header.Width + 3) / 4) * Math.Max(1, (header.Height + 3) / 4) * 8;

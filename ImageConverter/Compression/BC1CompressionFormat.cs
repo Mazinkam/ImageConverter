@@ -31,7 +31,9 @@ namespace Converter.Compression
                 block.ColorIndexes[i] = Helpers.GetIndexOfClosestColor(colorTable, Helpers.To16Bit(color32));
             }
 
-            return block.ToBytes();
+            var b = block.ToBytes();
+
+            return b;
         }
 
         public Color[] Decompress(byte[] blockData)

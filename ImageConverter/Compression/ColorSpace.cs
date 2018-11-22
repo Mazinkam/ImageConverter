@@ -21,6 +21,8 @@ namespace Converter.Compression
 
         public Color this[int index] => _colors[index];
 
+        public bool HasAlpha => MinAlpha < 255;
+
         public ColorSpace(IEnumerable<Color> colors)
         {
             _colors = colors.ToList();

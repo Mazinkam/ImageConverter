@@ -32,6 +32,10 @@ namespace Converter.Misc
                 (byte)('1') << 24;
         }
 
+        public static bool HasAlpha(this Color color)
+        {
+            return color.A < 0xFF;
+        }
 
         /// <summary>
         /// https://stackoverflow.com/questions/3722307/is-there-an-easy-way-to-blend-two-system-drawing-color-values
@@ -190,16 +194,26 @@ namespace Converter.Misc
         /// <summary>
         /// create color tablewith 1bitalpha colors, 
         /// </summary>
-        /// <param name="color0"></param>
-        /// <param name="color1"></param>
-        /// <returns></returns>
         public static Color565[] CreateFor1BitAlpha(Color565 color0, Color565 color1)
         {
             var colors = new Color565[4];
             colors[0] = color0;
             colors[1] = color1;
-            colors[2] = Helpers.Blend(color0, color1);
+            colors[2] = Blend(color1, color0);
             colors[3] = Color565.Black;
+            return colors;
+        }
+
+        /// <summary>
+        /// Creates 16bit color table, where the 3rd and 4th colors are lerped between the reference colors
+        /// </summary>
+        public static Color565[] CreateFor16Bit(Color565 color0, Color565 color1)
+        {
+            var colors = new Color565[4];
+            colors[0] = color0;
+            colors[1] = color1;
+            colors[2] = LerpTwoThirds(color1, color0);
+            colors[3] = LerpTwoThirds(color0, color1);
             return colors;
         }
 

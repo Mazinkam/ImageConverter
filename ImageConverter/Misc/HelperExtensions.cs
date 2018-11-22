@@ -6,6 +6,29 @@ namespace Converter.Misc
     public static class HelperExtensions
     {
         /// <summary>
+        /// flips array horizontally
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="height"></param>
+        /// <returns></returns>
+        public static byte[] FlipArrayHorizontal(this byte[] source, int height)
+        {
+            byte[] tempArray = new byte[source.Length];
+
+            var bytesPerRow = source.Length / height;
+
+            for (int i = 0; i < height; i++)
+            {
+                int sourceIndex = i * (int)bytesPerRow;
+                int destIndex = ((int)(height - i) * (int)bytesPerRow) - (int)bytesPerRow;
+
+                Array.Copy(source, sourceIndex, tempArray, destIndex, bytesPerRow);
+            }
+
+            return tempArray;
+        }
+
+        /// <summary>
         /// https://stackoverflow.com/questions/943635/getting-a-sub-array-from-an-existing-array
         /// </summary>
         /// <typeparam name="T"></typeparam>
