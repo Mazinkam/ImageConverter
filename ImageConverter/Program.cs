@@ -12,9 +12,7 @@ class Program
         Console.WriteLine("Welcome to Image Converter. Currently supporting DDS -> BMP and BMP -> DDS");
         Console.WriteLine("Image Converter support 24bit bmp files and DXT1 DDS files");
         Console.WriteLine("Type file name.");
-        ImageConverter.ConvertBMPToDDS("redblue.bmp", compressionFormat);
-       //ImageConverter.ConvertDDSToBMP("test2.dds", compressionFormat);
-        /*
+
         var fileName = Console.ReadLine();
 
         if (fileName.ToLower().EndsWith(".dds"))
@@ -28,7 +26,7 @@ class Program
         else
         {
             Console.WriteLine("File format not supported.");
-        }*/
+        }
 
         Console.ReadKey();
     }

@@ -34,7 +34,7 @@ namespace Converter.Misc
 
         public static bool HasAlpha(this Color color)
         {
-            return color.A < 0xFF;
+            return color.A > 0xFF;
         }
 
         /// <summary>
@@ -114,11 +114,13 @@ namespace Converter.Misc
         /// Calculates the Euclidean distance between the two 32-bit colors
         /// https://stackoverflow.com/questions/3968179/compare-rgb-colors-in-c-sharp
         /// </summary>
-        public static double Distance(Color color0, Color color1)
+        public static double ColourDistance(Color e1, Color e2)
         {
-            return DistanceByComponents(
-                new[] { color0.R, color0.G, color0.B },
-                new[] { color1.R, color1.G, color1.B });
+            long rmean = (e1.R + e2.R) / 2;
+            long r = e1.R - e2.R;
+            long g = e1.G - e2.G;
+            long b = e1.B - e2.B;
+            return Math.Sqrt((((512 + rmean) * r * r) >> 8) + 4 * g * g + (((767 - rmean) * b * b) >> 8));
         }
 
         /// <summary>
@@ -166,7 +168,8 @@ namespace Converter.Misc
 
         public static int GetIndexOfClosestColor(Color565[] colors, Color565 targetColor)
         {
-            return Array.IndexOf(colors, GetClosestColor(colors, targetColor));
+            var closestColor = GetClosestColor(colors, targetColor);
+            return Array.IndexOf(colors, closestColor);
         }
 
 
@@ -201,19 +204,6 @@ namespace Converter.Misc
             colors[1] = color1;
             colors[2] = Blend(color1, color0);
             colors[3] = Color565.Black;
-            return colors;
-        }
-
-        /// <summary>
-        /// Creates 16bit color table, where the 3rd and 4th colors are lerped between the reference colors
-        /// </summary>
-        public static Color565[] CreateFor16Bit(Color565 color0, Color565 color1)
-        {
-            var colors = new Color565[4];
-            colors[0] = color0;
-            colors[1] = color1;
-            colors[2] = LerpTwoThirds(color1, color0);
-            colors[3] = LerpTwoThirds(color0, color1);
             return colors;
         }
 

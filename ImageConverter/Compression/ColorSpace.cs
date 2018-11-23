@@ -32,23 +32,23 @@ namespace Converter.Compression
         private void CalculateColorSpace()
         {
             var referenceColor = Color.FromArgb(0, 0, 0);
-            var lowColor = Color.FromArgb(255, 255, 255);
-            var highColor = Color.FromArgb(0, 0, 0);
-            var lowDistance = Helpers.Distance(lowColor, referenceColor);
-            var highDistance = Helpers.Distance(highColor, referenceColor);
+            var lowColor = Color.FromArgb(0, 0, 0);
+            var highColor = Color.FromArgb(255, 255, 255);
+            var lowDistance = Helpers.ColourDistance(lowColor, referenceColor);
+            var highDistance = Helpers.ColourDistance(highColor, referenceColor);
 
             MinAlpha = 255;
             MaxAlpha = 0;
 
             foreach (var color in _colors)
             {
-                var distance = Helpers.Distance(color, referenceColor);
-                if (distance < lowDistance)
+                var distance = Helpers.ColourDistance(color, referenceColor);
+                if (distance > lowDistance)
                 {
                     lowColor = color;
                     lowDistance = distance;
                 }
-                if (distance > highDistance)
+                if (distance < highDistance)
                 {
                     highColor = color;
                     highDistance = distance;
