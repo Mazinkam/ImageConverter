@@ -185,7 +185,7 @@ namespace Converter.Converter
                 int numberOfHorizontalBlocks = (int)ddsFile.DDSHeader.Width / Constants.BlockDimension;
                 int numberOfBlocks = numberOfVerticalBlocks * numberOfHorizontalBlocks;
 
-                for (int i = 0; i < numberOfBlocks-1; ++i)
+                for (int i = 0; i < numberOfBlocks; ++i)
                 {
                     var blockIndex = Helpers.ToColumnMajor(i, numberOfHorizontalBlocks);
                     var blockData = ddsFile.GetBlockData(blockIndex);

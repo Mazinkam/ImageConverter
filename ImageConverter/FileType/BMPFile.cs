@@ -88,7 +88,6 @@ namespace Converter.FileType
                     var color = colors[colorIndex++];
 
                     // Bytes are stored in inverted (BGRA) order
-                    PixelData[pixelIndex + 3] = color.A;
                     PixelData[pixelIndex + 2] = color.R;
                     PixelData[pixelIndex + 1] = color.G;
                     PixelData[pixelIndex] = color.B;
